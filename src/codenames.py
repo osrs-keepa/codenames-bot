@@ -7,20 +7,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+# TODO: accept this as input
+CODENAMES_URL = "https://codenames.game/room/film-drone-screen"
+
 GameLog = []
 BluePlayerLog = []
 RedPlayerLog = []
 GameGoing = True
-CLEANR = re.compile('<.*?>')
-
-# CLUE LOG FORMAT
-# OPERATIVE GUESS FORMAT
-# name: string
-# team: 'red' | 'blue'
-# success: bool
+CLEANR = re.compile('<.*?>')  # compile regex to remove tags once
 
 
 def login(driver):
+    # joins the game with nickname 'codenames_bot'
     try:
         nickname_input = WebDriverWait(driver, 10).until(
             # nickname button when you load in
@@ -40,6 +38,7 @@ def login(driver):
 
 
 def getCards(driver):
+    # get the list of cards, not sure what we are going to do with this
     try:
         elements = WebDriverWait(driver, 10).until(
             EC.presence_of_all_elements_located(
@@ -52,11 +51,17 @@ def getCards(driver):
 
 
 def cleanhtml(raw_html):
+    # removes the <b> <em> tags from our log
     cleantext = re.sub(CLEANR, '', raw_html)
     return cleantext
 
 
 def processGuessLog(l):
+    # OPERATIVE GUESS FORMAT
+    # name: string
+    # team: 'red' | 'blue'
+    # success: bool
+    # word: string
     cleanGuess = cleanhtml(l.get_attribute('innerHTML'))
     name = cleanGuess.split(' ')[0]
     word = cleanGuess.split(' ')[2]
@@ -85,6 +90,7 @@ def getLogEntries(driver):
         except Exception:
             print('couldnt find gamelog')
         try:
+            # TODO: separate operatives from spymaster
             BluePlayerLog = WebDriverWait(driver, 5).until(
                 EC.presence_of_all_elements_located(
                     (By.XPATH, "//main[@id='teamBoard-blue']/div/div/div/section"))  # xpath to blue operatives
@@ -95,6 +101,7 @@ def getLogEntries(driver):
         except Exception:
             print('couldnt find blue team members')
         try:
+            # TODO: separate operatives from spymaster
             RedPlayerLog = WebDriverWait(driver, 5).until(
                 EC.presence_of_all_elements_located(
                     (By.XPATH, "//main[@id='teamBoard-red']/div/div/div/section"))  # xpath to red operatives
@@ -104,14 +111,7 @@ def getLogEntries(driver):
                 print(r.get_attribute('innerHTML'))
         except Exception:
             print('couldnt find red team members')
-
-        for x in GameLog:
-            if("TEAM WINS" in x.get_attribute('innerHTML')):
-                return
         time.sleep(2)
-
-
-CODENAMES_URL = "https://codenames.game/room/film-drone-screen"
 
 
 driver = webdriver.Chrome()
@@ -134,18 +134,4 @@ for card in cardList:
 
 getLogEntries(driver)
 
-print('GAMELOG')
-for log in GameLog:
-    print(log.get_attribute('innerHTML'))
-
-print('REDPLAYERS')
-for log in RedPlayerLog:
-    print(log.get_attribute('innerHTML'))
-
-print('BLUEPLAYERS')
-for log in BluePlayerLog:
-    print(log.get_attribute('innerHTML'))
 # driver.close()
-
-
-# log participants, cards, who picked what, spymaster, who won
